@@ -13,6 +13,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Force sidebar to be visible
+st.sidebar.empty()
+
 # Apply custom CSS
 st.markdown(get_custom_css(), unsafe_allow_html=True)
 

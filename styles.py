@@ -35,13 +35,43 @@ def get_custom_css():
     }
     
     /* Sidebar styling */
-    .css-1d391kg {
+    .stSidebar {
         background: #111 !important;
         border-right: 1px solid #333;
+        min-width: 300px !important;
+        width: 300px !important;
     }
     
-    .sidebar-content {
-        padding: 1rem;
+    .stSidebar > div {
+        background: #111 !important;
+    }
+    
+    .stSidebar .block-container {
+        padding: 1rem !important;
+    }
+    
+    /* Sidebar elements visibility */
+    .stSidebar .stMarkdown {
+        color: #e0e0e0 !important;
+    }
+    
+    .stSidebar .stMarkdown h3 {
+        color: #fff !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .stSidebar .stFileUploader {
+        color: #e0e0e0 !important;
+    }
+    
+    .stSidebar .stFileUploader label {
+        color: #e0e0e0 !important;
+    }
+    
+    /* Force sidebar visibility */
+    section[data-testid="stSidebar"] {
+        display: block !important;
+        visibility: visible !important;
     }
     
     /* File uploader styling */
