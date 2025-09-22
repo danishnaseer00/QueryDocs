@@ -13,10 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Force sidebar to be visible
-st.sidebar.empty()
-
-# Apply custom CSS
+# Apply custom CSS first to hide toggle
 st.markdown(get_custom_css(), unsafe_allow_html=True)
 
 # Initialize session state

@@ -34,7 +34,7 @@ def get_custom_css():
         font-weight: 400;
     }
     
-    /* Sidebar styling */
+    /* Sidebar styling - Always visible */
     .stSidebar {
         background: #111 !important;
         border-right: 1px solid #333;
@@ -44,13 +44,35 @@ def get_custom_css():
     
     .stSidebar > div {
         background: #111 !important;
-    }
-    
-    .stSidebar .block-container {
         padding: 1rem !important;
     }
     
-    /* Sidebar elements visibility */
+    /* Hide sidebar toggle button completely */
+    button[kind="header"][data-testid="baseButton-header"] {
+        display: none !important;
+    }
+    
+    /* Hide the collapse sidebar button */
+    .stSidebar .css-1lcbmhc {
+        display: none !important;
+    }
+    
+    /* Force sidebar to always be expanded */
+    section[data-testid="stSidebar"] {
+        display: block !important;
+        visibility: visible !important;
+        transform: translateX(0px) !important;
+        min-width: 300px !important;
+        width: 300px !important;
+    }
+    
+    section[data-testid="stSidebar"][aria-expanded="false"] {
+        transform: translateX(0px) !important;
+        min-width: 300px !important;
+        width: 300px !important;
+    }
+    
+    /* Sidebar elements styling */
     .stSidebar .stMarkdown {
         color: #e0e0e0 !important;
     }
@@ -68,10 +90,9 @@ def get_custom_css():
         color: #e0e0e0 !important;
     }
     
-    /* Force sidebar visibility */
-    section[data-testid="stSidebar"] {
-        display: block !important;
-        visibility: visible !important;
+    .stSidebar .stButton > button {
+        width: 100% !important;
+        margin: 0.5rem 0 !important;
     }
     
     /* File uploader styling */
@@ -188,9 +209,50 @@ def get_custom_css():
         background: #FF9800;
     }
     
-    /* Hide streamlit branding */
+    /* Hide streamlit branding and disable sidebar toggle */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    
+    /* JavaScript to disable sidebar toggle */
     </style>
+    
+    <script>
+    // Disable sidebar toggle functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        // Hide all toggle buttons
+        const toggleButtons = document.querySelectorAll('button[data-testid="baseButton-header"]');
+        toggleButtons.forEach(btn => {
+            btn.style.display = 'none';
+            btn.disabled = true;
+        });
+        
+        // Prevent sidebar collapse
+        const sidebar = document.querySelector('section[data-testid="stSidebar"]');
+        if (sidebar) {
+            sidebar.style.transform = 'translateX(0px)';
+            sidebar.style.minWidth = '300px';
+            sidebar.style.width = '300px';
+        }
+        
+        // Override any click events on sidebar toggle
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('button[data-testid="baseButton-header"]')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        }, true);
+    });
+    
+    // Continuous monitoring to keep sidebar open
+    setInterval(function() {
+        const sidebar = document.querySelector('section[data-testid="stSidebar"]');
+        if (sidebar) {
+            sidebar.style.transform = 'translateX(0px)';
+            sidebar.style.display = 'block';
+            sidebar.style.visibility = 'visible';
+        }
+    }, 100);
+    </script>
     """
