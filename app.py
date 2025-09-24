@@ -45,8 +45,16 @@ def main():
         )
         
         if uploaded_file is not None:
-            if st.button("🔄 Process PDF", type="primary"):
-                process_pdf(uploaded_file)
+            # Show file info
+            file_size_mb = len(uploaded_file.getvalue()) / (1024 * 1024)
+            st.write(f"📎 **{uploaded_file.name}**")
+            st.write(f"📊 Size: {file_size_mb:.2f} MB")
+            
+            if file_size_mb > 10:
+                st.error("⚠️ File too large! Max size: 10MB")
+            else:
+                if st.button("🔄 Process PDF", type="primary"):
+                    process_pdf(uploaded_file)
         
         st.markdown("---")
         
@@ -120,28 +128,61 @@ def main():
 def process_pdf(uploaded_file):
     """Process the uploaded PDF file."""
     try:
+        # Check file size (limit to 10MB)
+        file_size = len(uploaded_file.getvalue())
+        if file_size > 10 * 1024 * 1024:  # 10MB limit
+            st.error("❌ File too large! Please upload a PDF smaller than 10MB.")
+            return
+        
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
         with st.spinner("🔄 Processing PDF..."):
-            # Initialize processors
+            # Step 1: Extract text (30% progress)
+            status_text.text("📄 Extracting text from PDF...")
             pdf_processor = PDFProcessor()
-            vector_store = VectorStore()
-            
-            # Extract text from PDF
             text = pdf_processor.extract_text_from_pdf(uploaded_file)
+            progress_bar.progress(30)
             
-            # Create chunks
+            # Check if text is too short
+            if len(text.strip()) < 100:
+                st.error("❌ PDF contains very little text. Please upload a text-based PDF.")
+                return
+            
+            # Step 2: Create chunks (50% progress)
+            status_text.text("✂️ Creating text chunks...")
             chunks = pdf_processor.create_chunks(text)
+            progress_bar.progress(50)
             
-            # Create vector store
+            # Step 3: Create vector store (80% progress)
+            status_text.text("🔍 Creating search database...")
+            vector_store = VectorStore()
             vector_store.create_vectorstore(chunks)
+            progress_bar.progress(80)
             
-            # Initialize RAG chain
+            # Step 4: Initialize RAG chain (100% progress)
+            status_text.text("🤖 Initializing AI...")
             st.session_state.rag_chain = RAGChain()
             st.session_state.pdf_uploaded = True
+            progress_bar.progress(100)
+            
+            # Clear progress indicators
+            progress_bar.empty()
+            status_text.empty()
             
             st.success("✅ PDF processed successfully! You can now start chatting.")
+            st.balloons()  # Celebration effect
             
     except Exception as e:
         st.error(f"❌ Error processing PDF: {str(e)}")
+        # Reset state on error
+        st.session_state.pdf_uploaded = False
+        st.session_state.rag_chain = None
+        
+        # Clean up any partial files
+        if os.path.exists("./chroma_db"):
+            import shutil
+            shutil.rmtree("./chroma_db")
 
 def handle_chat(question):
     """Handle chat interaction."""
