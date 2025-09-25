@@ -1,15 +1,10 @@
 import chromadb
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain.schema import Document
 from config import CHROMA_DB_PATH, SIMILARITY_THRESHOLD
 import shutil
 import os
-import sys
-
-# Fix for ChromaDB SQLite issue
-__import__('pysqlite3')
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 class VectorStore:
     def __init__(self):
@@ -33,31 +28,15 @@ class VectorStore:
                 print("🗑️ Cleared existing database")
             
             # Limit chunks for stability
-            if len(chunks) > 50:
-                print(f"⚠️ Limiting to first 50 chunks for stability")
-                chunks = chunks[:50]
+            if len(chunks) > 30:
+                print(f"⚠️ Limiting to first 30 chunks for stability")
+                chunks = chunks[:30]
             
-            # Process in very small batches to prevent hanging
-            batch_size = 3
-            all_docs = []
+            print("🔍 Creating ChromaDB vector store (this may take a moment)...")
             
-            for i in range(0, len(chunks), batch_size):
-                batch = chunks[i:i + batch_size]
-                batch_num = (i // batch_size) + 1
-                total_batches = (len(chunks) + batch_size - 1) // batch_size
-                
-                print(f"📦 Processing batch {batch_num}/{total_batches} ({len(batch)} chunks)")
-                all_docs.extend(batch)
-                
-                # Small delay to prevent overwhelming
-                import time
-                time.sleep(0.1)
-            
-            print("🔍 Creating ChromaDB vector store...")
-            
-            # Create the vector store with all documents at once
+            # Create the vector store with all documents at once - simpler approach
             self.vectorstore = Chroma.from_documents(
-                documents=all_docs,
+                documents=chunks,
                 embedding=self.embeddings,
                 persist_directory=CHROMA_DB_PATH,
                 collection_name=collection_name
