@@ -157,7 +157,7 @@ def process_pdf(uploaded_file):
             # Step 3: Create vector store (80% progress)
             status_text.text("🔍 Creating search database...")
             vector_store = VectorStore()
-            vector_store.create_vectorstore(chunks)
+            await vectorstore.create_vectorstore_async(chunks)
             progress_bar.progress(80)
             
             # Step 4: Initialize RAG chain (100% progress)
