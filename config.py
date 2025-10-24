@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-CHROMA_DB_PATH = "./chroma_db"
+FAISS_INDEX_PATH = "./faiss_index"
 
 # ✅ ULTRA-CONSERVATIVE SETTINGS FOR 8GB RAM
 CHUNK_SIZE = 400        # Very small chunks

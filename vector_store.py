@@ -1,79 +1,93 @@
-import chromadb
-from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain.schema import Document
-from config import CHROMA_DB_PATH
+# vector_store.py
 import os
 import shutil
+import psutil
+from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import SentenceTransformerEmbeddings
+from langchain.schema import Document
+from config import FAISS_INDEX_PATH, SIMILARITY_THRESHOLD
+
 
 class VectorStore:
     def __init__(self):
-        print("🔄 Initializing ultra-light embeddings...")
-        # ✅ Use the absolute lightest model available
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2",
+        print("Initializing embeddings model (CPU)...")
+        self.embeddings = SentenceTransformerEmbeddings(
+            model_name="sentence-transformers/paraphrase-MiniLM-L3-v2",
             model_kwargs={'device': 'cpu'}
         )
         self.vectorstore = None
+        print("Embeddings model ready!")
 
     def create_vectorstore(self, chunks: list[Document]):
-        """Ultra-simple synchronous vector store creation"""
+        """Create and save FAISS index from document chunks."""
         try:
-            print(f"🔄 Creating vector store with {len(chunks)} chunks...")
-            
-            # ✅ Always clean up existing DB first
-            if os.path.exists(CHROMA_DB_PATH):
-                shutil.rmtree(CHROMA_DB_PATH)
-            
-            # ✅ HARD LIMIT: Maximum 15 chunks for 8GB RAM
-            if len(chunks) > 15:
-                chunks = chunks[:15]
-                print(f"⚠️ Limited to 15 chunks for 8GB RAM")
-            
-            print("⚙️ Building vector index...")
-            
-            # ✅ Direct synchronous creation - no fancy stuff
-            self.vectorstore = Chroma.from_documents(
+            print(f"Creating FAISS vector store with {len(chunks)} chunks...")
+
+            # Clear old index
+            if os.path.exists(FAISS_INDEX_PATH):
+                shutil.rmtree(FAISS_INDEX_PATH)
+                print("Cleared old FAISS index.")
+
+            # Dynamic chunk limiting based on RAM
+            total_ram_gb = psutil.virtual_memory().total / (1024 ** 3)
+            max_chunks = 10 if total_ram_gb <= 8 else 30
+            if len(chunks) > max_chunks:
+                print(f"Warning: Limiting to {max_chunks} chunks for low RAM.")
+                chunks = chunks[:max_chunks]
+
+            print("Building FAISS index...")
+            self.vectorstore = FAISS.from_documents(
                 documents=chunks,
-                embedding=self.embeddings,
-                persist_directory=CHROMA_DB_PATH
+                embedding=self.embeddings
             )
-            
-            print("✅ Vector store created successfully!")
+
+            print("Saving index to disk...")
+            self.vectorstore.save_local(FAISS_INDEX_PATH)
+            print("FAISS vector store created and saved!")
+
             return self.vectorstore
-            
+
         except Exception as e:
-            print(f"❌ Vector store error: {str(e)}")
-            # Clean up on failure
-            if os.path.exists(CHROMA_DB_PATH):
-                shutil.rmtree(CHROMA_DB_PATH)
+            print(f"Error creating vector store: {e}")
+            if os.path.exists(FAISS_INDEX_PATH):
+                shutil.rmtree(FAISS_INDEX_PATH)
             raise
 
     def load_vectorstore(self):
-        """Load existing vector store"""
+        """Load FAISS index from disk."""
         try:
-            if os.path.exists(CHROMA_DB_PATH):
-                self.vectorstore = Chroma(
-                    persist_directory=CHROMA_DB_PATH,
-                    embedding_function=self.embeddings
+            if os.path.exists(FAISS_INDEX_PATH):
+                print("Loading FAISS vector store...")
+                self.vectorstore = FAISS.load_local(
+                    folder_path=FAISS_INDEX_PATH,
+                    embeddings=self.embeddings,
+                    allow_dangerous_deserialization=True  # Required for local load
                 )
+                print("FAISS vector store loaded!")
                 return self.vectorstore
-            return None
+            else:
+                print("No FAISS index found.")
+                return None
         except Exception as e:
-            print(f"❌ Load error: {e}")
+            print(f"Error loading vector store: {e}")
             return None
 
-    def similarity_search(self, query: str, k: int = 2):
-        """Simple search"""
+    def similarity_search(self, query: str, k: int = 3):
+        """Search for similar chunks with score."""
         if not self.vectorstore:
             self.load_vectorstore()
-            
-        if not self.vectorstore:
-            return []
-            
+            if not self.vectorstore:
+                return []
+
         try:
+            print(f"Searching: {query[:50]}...")
             results = self.vectorstore.similarity_search_with_score(query, k=k)
-            return results
+
+            # Filter by similarity threshold (lower score = better)
+            filtered = [(doc, score) for doc, score in results if score <= (1 - SIMILARITY_THRESHOLD)]
+            print(f"Found {len(filtered)} relevant results.")
+            return filtered
+
         except Exception as e:
-            print(f"❌ Search error: {e}")
+            print(f"Search error: {e}")
             return []
