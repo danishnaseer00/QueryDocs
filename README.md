@@ -9,12 +9,12 @@ A professional RAG (Retrieval-Augmented Generation) application that allows you 
 - 🎯 **Context-Aware Responses**: Gets answers directly from your document
 - 🤖 **Fallback AI**: Handles general questions not covered in the PDF
 - 🎨 **Professional Dark UI**: Clean, modern interface with Streamlit
-- ⚡ **Fast Vector Search**: Uses ChromaDB for efficient document retrieval
+- ⚡ **Fast Vector Search**: Uses FAISS for efficient document retrieval
 
 ## Architecture
 
 - **Frontend**: Streamlit with custom dark theme
-- **Vector Database**: ChromaDB for document storage and similarity search
+- **Vector Database**: Faiss for document storage and similarity search
 - **Embeddings**: HuggingFace sentence-transformers
 - **LLM**: Google Gemini Pro (free tier)
 - **Framework**: LangChain for RAG implementation
@@ -74,7 +74,7 @@ pdf-chat-assistant/
 ├── requirements.txt    # Python dependencies
 ├── .env.template       # Environment variables template
 ├── .env               # Your API keys (create this file)
-└── chroma_db/         # ChromaDB storage (auto-created)
+└── faiss_index/         # ChromaDB storage (auto-created)
 ```
 
 ## How It Works
