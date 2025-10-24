@@ -1,9 +1,24 @@
+# Core dependencies - optimized versions
 streamlit>=1.29.0
-langchain>=0.1.0
-langchain-google-genai>=0.0.6
-chromadb>=0.4.22
-PyPDF2>=3.0.1
 python-dotenv>=1.0.0
-sentence-transformers>=2.2.2
-langchain-community>=0.0.13
-psutil>=5.9.0
+
+# LangChain ecosystem
+langchain>=0.1.0
+langchain-community>=0.0.20
+langchain-google-genai>=0.0.11
+
+# Vector store - FAISS (CPU-optimized)
+faiss-cpu>=1.7.4
+
+# Embeddings - lightweight model
+sentence-transformers>=2.3.1
+
+# PDF processing
+PyPDF2>=3.0.1
+
+# Utilities
+psutil>=5.9.6
+
+# Optional: For deployment
+gunicorn>=21.2.0  # For production deployment
+watchdog>=3.0.0   # For auto-reload in development
